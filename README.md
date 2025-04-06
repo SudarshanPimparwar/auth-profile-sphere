@@ -1,73 +1,72 @@
-# Welcome to your Lovable project
 
-## Project info
+# JWT Authentication System with React & MongoDB
 
-**URL**: https://lovable.dev/projects/f80933d1-cae7-4ec8-892f-89987cb104dd
+This project demonstrates a complete authentication system using JWT tokens, React, and MongoDB. It includes user registration, login, profile management, and client listing features.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- User registration and login with JWT authentication
+- Profile page with editable user details
+- Client list display
+- Responsive design
+- Context API for state management
 
-**Use Lovable**
+## Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f80933d1-cae7-4ec8-892f-89987cb104dd) and start prompting.
+- **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Node.js, Express (not included in this repo)
+- **Database**: MongoDB (connection required)
+- **Authentication**: JWT tokens
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Frontend Setup
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. Clone this repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Start the development server:
+   ```
+   npm run dev
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Backend Requirements
 
-Follow these steps:
+This frontend expects a backend server running on `http://localhost:5000` with the following API endpoints:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- `POST /api/auth/register` - For user registration
+- `POST /api/auth/login` - For user login
+- `GET /api/auth/verify` - For token verification
+- `PATCH /api/users/profile` - For updating user profile
+- `GET /api/clients` - For fetching client list
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Backend Implementation Notes
 
-# Step 3: Install the necessary dependencies.
-npm i
+The backend should implement the following functionality:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+1. User registration with password hashing
+2. JWT token generation and validation
+3. User profile management
+4. Client data storage and retrieval
+5. Appropriate middleware for route protection
 
-**Edit a file directly in GitHub**
+## Environment Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a MongoDB database and ensure your backend connects to it properly. The frontend expects the backend to handle all data persistence operations.
 
-**Use GitHub Codespaces**
+## Deployment
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+For production deployment:
 
-## What technologies are used for this project?
+1. Build the React application:
+   ```
+   npm run build
+   ```
+2. Deploy the generated files to your hosting service
+3. Ensure your backend is properly deployed and accessible
 
-This project is built with:
+## Note
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/f80933d1-cae7-4ec8-892f-89987cb104dd) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This is the frontend portion of the application only. You will need to implement or connect to a backend service that provides the required API endpoints.
