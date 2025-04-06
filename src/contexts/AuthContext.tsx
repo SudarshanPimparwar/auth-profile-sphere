@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 // Define user type
 export interface User {
@@ -24,6 +25,23 @@ interface AuthContextType {
   logout: () => void;
   updateProfile: (userData: Partial<User>) => Promise<void>;
 }
+
+// Mock user database (for demo purposes)
+const mockUsers: User[] = [
+  {
+    _id: '1',
+    name: 'Test User',
+    email: 'test@example.com',
+    phone: '1234567890',
+    address: '123 Test St',
+    profession: 'Developer'
+  }
+];
+
+// Generate a simple JWT-like token (for demo purposes)
+const generateToken = (userId: string): string => {
+  return `mock-jwt-token-${userId}-${Date.now()}`;
+};
 
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
@@ -48,7 +66,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   
   // Check if user is authenticated on mount
   useEffect(() => {
@@ -59,26 +77,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
       
       try {
-        const response = await fetch('http://localhost:5000/api/auth/verify', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+        // For demo purposes, we'll simulate token verification
+        // In a real app, this would be a fetch request to your backend
+        setTimeout(() => {
+          const tokenParts = token.split('-');
+          const userId = tokenParts[2];
+          
+          const foundUser = mockUsers.find(u => u._id === userId);
+          if (foundUser) {
+            setUser(foundUser);
+          } else {
+            // Try to find a user from localStorage if available
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+              setUser(JSON.parse(storedUser));
+            } else {
+              localStorage.removeItem('token');
+              setToken(null);
+            }
           }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data.user);
-        } else {
-          localStorage.removeItem('token');
-          setToken(null);
-        }
+          setIsLoading(false);
+        }, 500);
       } catch (error) {
         console.error('Error verifying token:', error);
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setToken(null);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -90,35 +114,44 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
       
-      const data = await response.json();
+      // Simulating an API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+      // Find user by email (in a real app, this would be a backend request)
+      const foundUser = mockUsers.find(u => u.email === email);
+      const storedUsers = localStorage.getItem('users');
+      const parsedUsers = storedUsers ? JSON.parse(storedUsers) : [];
+      const registeredUser = parsedUsers.find((u: User) => u.email === email);
+      
+      if (foundUser || registeredUser) {
+        const userToUse = foundUser || registeredUser;
+        const newToken = generateToken(userToUse._id);
+        
+        localStorage.setItem('token', newToken);
+        localStorage.setItem('user', JSON.stringify(userToUse));
+        
+        setToken(newToken);
+        setUser(userToUse);
+        
+        uiToast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+        
+        toast.success("Login successful! Welcome back!");
+        navigate('/profile');
+      } else {
+        throw new Error('Invalid email or password');
       }
-      
-      localStorage.setItem('token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
-      });
-      navigate('/profile');
     } catch (error) {
       if (error instanceof Error) {
-        toast({
+        uiToast({
           variant: "destructive",
           title: "Login failed",
           description: error.message,
         });
+        toast.error(`Login failed: ${error.message}`);
       }
       throw error;
     } finally {
@@ -130,35 +163,52 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signup = async (name: string, email: string, password: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name, email, password })
-      });
       
-      const data = await response.json();
+      // Simulating an API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
+      // Check if user already exists
+      const storedUsers = localStorage.getItem('users');
+      const users = storedUsers ? JSON.parse(storedUsers) : [];
+      
+      if (users.some((u: User) => u.email === email)) {
+        throw new Error('User with this email already exists');
       }
       
-      localStorage.setItem('token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-      toast({
+      // Create new user
+      const newUser: User = {
+        _id: `user-${Date.now()}`,
+        name,
+        email,
+      };
+      
+      // Save user to "database" (localStorage in this case)
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
+      
+      // Generate token
+      const newToken = generateToken(newUser._id);
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(newUser));
+      
+      setToken(newToken);
+      setUser(newUser);
+      
+      uiToast({
         title: "Registration successful",
         description: "Your account has been created!",
       });
+      
+      toast.success("Registration successful! Your account has been created!");
       navigate('/profile');
     } catch (error) {
       if (error instanceof Error) {
-        toast({
+        uiToast({
           variant: "destructive",
           title: "Registration failed",
           description: error.message,
         });
+        toast.error(`Registration failed: ${error.message}`);
       }
       throw error;
     } finally {
@@ -169,48 +219,59 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Logout function
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken(null);
     setUser(null);
-    toast({
+    
+    uiToast({
       title: "Logged out",
       description: "You have been logged out successfully.",
     });
+    
+    toast.info("You have been logged out successfully.");
     navigate('/login');
   };
   
   // Update profile function
   const updateProfile = async (userData: Partial<User>) => {
-    if (!token) return;
+    if (!user) return;
     
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:5000/api/users/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(userData)
-      });
       
-      const data = await response.json();
+      // Simulating an API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Profile update failed');
+      // Update user in localStorage
+      const updatedUser = { ...user, ...userData };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Also update in "users" collection if exists
+      const storedUsers = localStorage.getItem('users');
+      if (storedUsers) {
+        const users = JSON.parse(storedUsers);
+        const updatedUsers = users.map((u: User) => 
+          u._id === user._id ? { ...u, ...userData } : u
+        );
+        localStorage.setItem('users', JSON.stringify(updatedUsers));
       }
       
-      setUser(prev => prev ? { ...prev, ...userData } : null);
-      toast({
+      setUser(updatedUser);
+      
+      uiToast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
       });
+      
+      toast.success("Your profile has been updated successfully!");
     } catch (error) {
       if (error instanceof Error) {
-        toast({
+        uiToast({
           variant: "destructive",
           title: "Update failed",
           description: error.message,
         });
+        toast.error(`Profile update failed: ${error.message}`);
       }
       throw error;
     } finally {
