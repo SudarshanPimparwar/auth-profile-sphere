@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
+import { addClient } from '@/services/clientService';
 
 // Define user type
 export interface User {
@@ -110,6 +110,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     verifyToken();
   }, [token]);
   
+  // Add user to clients list
+  const addUserToClients = async (user: User) => {
+    try {
+      await addClient({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        company: user.profession,
+      });
+    } catch (error) {
+      console.error('Error adding user to clients:', error);
+    }
+  };
+  
   // Login function
   const login = async (email: string, password: string) => {
     try {
@@ -133,6 +147,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
         setToken(newToken);
         setUser(userToUse);
+        
+        // Add the logged-in user to clients list
+        await addUserToClients(userToUse);
         
         uiToast({
           title: "Login successful",
@@ -194,6 +211,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setToken(newToken);
       setUser(newUser);
       
+      // Add the new user to clients list
+      await addUserToClients(newUser);
+      
       uiToast({
         title: "Registration successful",
         description: "Your account has been created!",
@@ -214,22 +234,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
-  
-  // Logout function
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
-    
-    uiToast({
-      title: "Logged out",
-      description: "You have been logged out successfully.",
-    });
-    
-    toast.info("You have been logged out successfully.");
-    navigate('/login');
   };
   
   // Update profile function
@@ -258,6 +262,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       setUser(updatedUser);
       
+      // Update user information in clients list
+      await addUserToClients(updatedUser);
+      
       uiToast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
@@ -277,6 +284,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Logout function
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+    
+    uiToast({
+      title: "Logged out",
+      description: "You have been logged out successfully.",
+    });
+    
+    toast.info("You have been logged out successfully.");
+    navigate('/login');
   };
   
   const value = {

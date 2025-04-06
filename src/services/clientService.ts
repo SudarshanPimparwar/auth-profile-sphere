@@ -69,3 +69,41 @@ export const getClients = async (token: string): Promise<Client[]> => {
     return [];
   }
 };
+
+// Function to add a new client
+export const addClient = async (client: Omit<Client, '_id'>): Promise<Client> => {
+  try {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Get existing clients
+    const storedClients = localStorage.getItem('clients');
+    const clients = storedClients ? JSON.parse(storedClients) : mockClients;
+    
+    // Check if client with this email already exists
+    const existingClient = clients.find((c: Client) => c.email === client.email);
+    if (existingClient) {
+      // If client already exists, just return it
+      return existingClient;
+    }
+    
+    // Create new client with ID
+    const newClient: Client = {
+      _id: `client-${Date.now()}`,
+      ...client
+    };
+    
+    // Add to clients list
+    clients.push(newClient);
+    localStorage.setItem('clients', JSON.stringify(clients));
+    
+    return newClient;
+  } catch (error) {
+    if (error instanceof Error) {
+      toast.error(`Error adding client: ${error.message}`);
+    } else {
+      toast.error('An unknown error occurred while adding client');
+    }
+    throw error;
+  }
+};
