@@ -192,8 +192,8 @@ const ProfilePage = () => {
                   <p className="text-sm text-muted-foreground">{user?._id}</p>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Email Verification</h3>
-                  <p className="text-sm text-muted-foreground">Your email has been verified</p>
+                  <h3 className="text-lg font-medium">Email Address</h3>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-medium">Account Created</h3>
